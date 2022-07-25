@@ -1,0 +1,11 @@
+{
+  "name": "video-agent-roku",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/newrelic/video-agent-roku.git"
+  },
+  "author": "newrelic",
+  "license": "ISC"
+}
