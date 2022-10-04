@@ -803,18 +803,20 @@ end function
 function nrSendBackupVideoEvent(actionName as String, attr = invalid) as Void
     'Use attributes in the backup (m.nrBackupAttributes) and recalculate some of them.
     ev = m.nrBackupAttributes
-    
+
     '- Set correct actionName
     backupActionName = ev["actionName"]
     ev["actionName"] = actionName
     '- Set current timestamp
     backupTimestamp = ev["timestamp"]
     ev["timestamp"] = FormatJson(nrTimestamp())
+
+    lint& = ParseJson(ev["timestamp"]) - ParseJson(backupTimestamp)
+    offsetTime = lint&
+    nrLog(["Offset time = ", offsetTime])
+
     '- Recalculate playhead, adding timestamp offset, except if last action is PAUSE
     if not isAction("PAUSE", backupActionName) 
-        lint& = ParseJson(ev["timestamp"]) - ParseJson(backupTimestamp)
-        offsetTime = lint&
-        nrLog(["Offset time = ", offsetTime])
         if ev["contentPlayhead"] <> invalid then ev["contentPlayhead"] = ev["contentPlayhead"] + offsetTime
         if ev["adPlayhead"] <> invalid then ev["adPlayhead"] = ev["adPlayhead"] + offsetTime
     end if
