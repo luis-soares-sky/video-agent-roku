@@ -2,7 +2,7 @@
 ' NRAgent.brs
 ' New Relic Agent Component.
 '
-' Copyright 2019 New Relic Inc. All Rights Reserved. 
+' Copyright 2019 New Relic Inc. All Rights Reserved.
 '**********************************************************
 
 sub init()
@@ -58,10 +58,10 @@ function NewRelicInit(account as String, apikey as String, region as String) as 
 
     'HTTP Request/Response IDs
     m.nrRequestIdentifiers = CreateObject("roAssociativeArray")
-    
+
     date = CreateObject("roDateTime")
     m.nrInitTimestamp = date.AsSeconds()
-    
+
     'Init main timer
     m.nrTimer = CreateObject("roTimespan")
     m.nrTimer.Mark()
@@ -93,13 +93,13 @@ function NewRelicInit(account as String, apikey as String, region as String) as 
     m.nrGroupingTimer = m.top.findNode("nrGroupingTimer")
     m.nrGroupingTimer.observeFieldScoped("fire", "nrGroupingHandler")
     m.nrGroupingTimer.control = "start"
-    
+
     'Ad tracker states
     m.rafState = CreateObject("roAssociativeArray")
     m.rafState.numberOfAds = 0
     nrResetRAFTimers()
     nrResetRAFState()
-    
+
     nrLog(["NewRelicInit, m = ", m])
 end function
 
@@ -125,8 +125,8 @@ function NewRelicVideoStart(videoObject as Object) as Void
     'Counters
     m.nrVideoCounter = 0
     m.nrNumberOfErrors = 0
-    
-    'Setup event listeners 
+
+    'Setup event listeners
     m.nrVideoObject.observeFieldScoped("state", "nrStateObserver")
     m.nrVideoObject.observeFieldScoped("contentIndex", "nrIndexObserver")
     m.nrvideoObject.observeFieldScoped("licenseStatus", "nrLicenseStatusObserver")
@@ -135,7 +135,7 @@ function NewRelicVideoStart(videoObject as Object) as Void
     m.hbTimer = m.top.findNode("nrHeartbeatTimer")
     m.hbTimer.observeFieldScoped("fire", "nrHeartbeatHandler")
     m.hbTimer.control = "start"
-    
+
     'Player Ready
     nrSendPlayerReady()
 end function
@@ -244,16 +244,16 @@ end function
 function nrSetCustomAttributeList(attr as Object, actionName = "" as String) as Void
     dictName = actionName
     if dictName = "" then dictName = "GENERAL_ATTR"
-    
+
     if m.nrCustomAttributes[dictName] = invalid
         m.nrCustomAttributes[dictName] = CreateObject("roAssociativeArray")
     end if
-    
+
     actionDict = m.nrCustomAttributes[dictName]
-    
+
     actionDict.Append(attr)
     m.nrCustomAttributes[dictName] = actionDict
-    
+
     nrLog(["Custom Attributes: ", m.nrCustomAttributes[dictName]])
 end function
 
@@ -346,7 +346,7 @@ function nrTrackRAF(evtType = invalid as Dynamic, ctx = invalid as Dynamic) as V
         firstQuartile = ctx.duration / 4.0
         secondQuartile = firstQuartile * 2.0
         thirdQuartile = firstQuartile * 3.0
-        
+
         if ctx.time >= firstQuartile and ctx.time < secondQuartile and m.rafState.didFirstQuartile = false
             m.rafState.didFirstQuartile = true
             nrSendRAFEvent("AD_QUARTILE", ctx, {"adQuartile": 1})
@@ -383,7 +383,7 @@ end function
 
 function nrLog(msg as Dynamic) as Void
     if m.nrLogsState = true
-        if type(msg) = "roArray"         
+        if type(msg) = "roArray"
             For i=0 To msg.Count() - 1 Step 1
                 print msg[i];
             End For
@@ -419,7 +419,7 @@ function nrProcessSystemEvent(i as Object) as Boolean
     if i.LogType = "http.error"
         nrSendHTTPError(i)
         return true
-    else if i.LogType = "http.connect" 
+    else if i.LogType = "http.connect"
         nrSendHTTPConnect(i)
         return true
     else if i.LogType = "http.complete"
@@ -493,10 +493,10 @@ function nrCreateEvent(eventType as String, actionName as String) as Object
     ev = CreateObject("roAssociativeArray")
     if actionName <> invalid and actionName <> "" then ev["actionName"] = actionName
     if eventType <> invalid and eventType <> "" then ev["eventType"] = eventType
-    
+
     ev["timestamp"] = FormatJson(nrTimestamp())
     ev = nrAddAttributes(ev)
-    
+
     return ev
 end function
 
@@ -529,7 +529,7 @@ function nrAddAttributes(ev as Object) as Object
     ev.AddReplace("displayAspectRatio", dev.GetDisplayAspectRatio())
     ev.AddReplace("videoMode", dev.GetVideoMode())
     ev.AddReplace("graphicsPlatform", dev.GetGraphicsPlatform())
-    ev.AddReplace("timeSinceLastKeypress", dev.TimeSinceLastKeypress() * 1000)    
+    ev.AddReplace("timeSinceLastKeypress", dev.TimeSinceLastKeypress() * 1000)
     app = CreateObject("roAppInfo")
     appid = app.GetID().ToInt()
     if appid = 0 then appid = 1
@@ -548,25 +548,25 @@ function nrAddAttributes(ev as Object) as Object
     actionName = ev["actionName"]
     actionCustomAttr = m.nrCustomAttributes[actionName]
     if actionCustomAttr <> invalid then ev.Append(actionCustomAttr)
-    
+
     'Time Since Load
     date = CreateObject("roDateTime")
     ev.AddReplace("timeSinceLoad", date.AsSeconds() - m.nrInitTimestamp)
-    
+
     return ev
 end function
 
 function nrProcessGroupedEvents() as Void
     'Convert groups into custom events and flush the groups dictionaries
-    
+
     nrLog("-- Process Grouped Events --")
     nrLogEvGroups()
-    
+
     if m.nrEventGroupsConnect.Count() > 0
         nrConvertGroupsToEvents(m.nrEventGroupsConnect)
         m.nrEventGroupsConnect = {}
     end if
-    
+
     if m.nrEventGroupsComplete.Count() > 0
         nrConvertGroupsToEvents(m.nrEventGroupsComplete)
         m.nrEventGroupsComplete = {}
@@ -587,7 +587,7 @@ function nrConvertGroupsToEvents(group as Object) as Void
             item.value["uploadSpeed"] = item.value["uploadSpeed"] / counter
             item.value["firstByteTime"] = item.value["firstByteTime"] / counter
         end if
-        
+
         nrSendCustomEvent("RokuSystem", item.value["actionName"], item.value)
     end for
 end function
@@ -612,7 +612,7 @@ function nrGroupNewEvent(ev as Object, actionName as String) as Void
     end if
 
     ev["actionName"] = actionName
-    
+
     if actionName = "HTTP_COMPLETE"
         m.nrEventGroupsComplete = nrGroupMergeEvent(matchPattern, m.nrEventGroupsComplete, ev)
     else if actionName = "HTTP_CONNECT"
@@ -632,7 +632,7 @@ function nrGroupMergeEvent(matchPattern as String, group as Object, ev as Object
         'Add new event to existing group
         evGroup["counter"] = evGroup["counter"] + 1
         evGroup["finalTimestamp"] = nrTimestamp()
-        
+
         'Add all numeric values
         if ev["actionName"] = "HTTP_COMPLETE"
             'Summations
@@ -645,8 +645,8 @@ function nrGroupMergeEvent(matchPattern as String, group as Object, ev as Object
             evGroup["downloadSpeed"] = evGroup["downloadSpeed"] + ev["downloadSpeed"]
             evGroup["uploadSpeed"] = evGroup["uploadSpeed"] + ev["uploadSpeed"]
             evGroup["firstByteTime"] = evGroup["firstByteTime"] + ev["firstByteTime"]
-        end if 
-        
+        end if
+
         group[matchPattern] = evGroup
     end if
     return group
@@ -753,7 +753,7 @@ end function
 
 function nrSendBufferStart() as Void
     m.nrTimeSinceBufferBegin = m.nrTimer.TotalMilliseconds()
-    
+
     if m.nrTimeSinceStarted = 0
         m.nrIsInitialBuffering = true
     else
@@ -844,13 +844,13 @@ function nrSendBackupVideoEvent(actionName as String, attr = invalid) as Void
     else
         ev["playtimeSinceLastEvent"] = m.nrPlaytimeSinceLastEvent.TotalMilliseconds()
     end if
-    
+
     'PROBLEMS:
     '- Custom attributes remains the same, could be problematic depending on the app
     '- Playhead calculation is estimative.
 
     nrRecordEvent(ev)
-    
+
 end function
 
 function nrSendBackupVideoEnd() as Void
@@ -921,7 +921,7 @@ function nrAddVideoAttributes(ev as Object) as Object
     if m.nrTotalAdPlaytime > 0
         ev.AddReplace("totalAdPlaytime", m.nrTotalAdPlaytime)
     end if
-    
+
     return ev
 end function
 
@@ -935,15 +935,15 @@ function nrAddRAFAttributes(ev as Object, ctx as Dynamic) as Object
         if ctx.rendersequence = "midroll" then ev.AddReplace("adPosition", "mid")
         if ctx.rendersequence = "postroll" then ev.AddReplace("adPosition", "post")
     end if
-    
+
     if ctx.duration <> invalid
         ev.AddReplace("adDuration", ctx.duration * 1000)
     end if
-    
+
     if ctx.server <> invalid
         ev.AddReplace("adSrc", ctx.server)
     end if
-    
+
     if ctx.ad <> invalid
         if ctx.ad.adid <> invalid
             ev.AddReplace("adId", ctx.ad.adid)
@@ -955,18 +955,18 @@ function nrAddRAFAttributes(ev as Object, ctx as Dynamic) as Object
             ev.AddReplace("adTitle", ctx.ad.adtitle)
         end if
     end if
-    
+
     if m.rafState.timeSinceAdRequested <> 0
         ev.AddReplace("timeSinceAdRequested", m.nrTimer.TotalMilliseconds() - m.rafState.timeSinceAdRequested)
     end if
-    
+
     if m.rafState.timeSinceAdStarted <> 0
         ev.AddReplace("timeSinceAdStarted", m.nrTimer.TotalMilliseconds() - m.rafState.timeSinceAdStarted)
     end if
-    
+
     ev.AddReplace("adPartner", "raf")
     ev.AddReplace("numberOfAds", m.rafState.numberOfAds)
-    
+
     return ev
 end function
 
@@ -1008,7 +1008,7 @@ function nrParseVideoStreamUrl(ev as Object) as String
     url = ev["Url"]
     r = CreateObject("roRegex", "\/\/|\/", "")
     arr = r.Split(url)
-    
+
     if arr.Count() < 2 then return ""
     if arr[0] <> "http:" and arr[0] <> "https:" then return ""
     if arr[1] = "" then return ""
@@ -1054,13 +1054,8 @@ function nrTimestamp() as LongInteger
 end function
 
 function nrGetOSVersion(dev as Object) as Object
-    if FindMemberFunction(dev, "GetOSVersion") <> Invalid
-        verDict = dev.GetOsVersion()
-        return {version: verDict.major + "." + verDict.minor + "." + verDict.revision, build: verDict.build}
-    else
-        verStr = dev.GetVersion()
-        return {version: verStr.Mid(2, 3) + "." + verStr.Mid(5, 1), build: verStr.Mid(8, 4)}
-    end if
+    verDict = dev.GetOsVersion()
+    return {version: verDict.major + "." + verDict.minor + "." + verDict.revision, build: verDict.build}
 end function
 
 function nrResetPlaytime() as Void
@@ -1082,7 +1077,7 @@ function nrPausePlaytime() as Void
         m.nrPlaytimeIsRunning = false
         date = CreateObject("roDateTime")
         offset = date.AsSeconds() - m.nrTotalPlaytimeLastTimestamp
-        m.nrTotalPlaytime = m.nrTotalPlaytime + offset 
+        m.nrTotalPlaytime = m.nrTotalPlaytime + offset
     end if
 end function
 
@@ -1090,7 +1085,7 @@ function nrCalculateTotalPlaytime() as Integer
     if m.nrPlaytimeIsRunning = true
         date = CreateObject("roDateTime")
         offset = date.AsSeconds() - m.nrTotalPlaytimeLastTimestamp
-        return m.nrTotalPlaytime + offset        
+        return m.nrTotalPlaytime + offset
     else
         return m.nrTotalPlaytime
     end if
@@ -1179,7 +1174,7 @@ function nrStateObserver() as Void
     else if m.nrVideoObject.state = "error"
         nrStateTransitionError()
     end if
-    
+
     m.nrLastVideoState = m.nrVideoObject.state
 
 end function
@@ -1193,11 +1188,11 @@ function nrStateTransitionPlaying() as Void
         currentSrc = nrGenerateStreamUrl()
         lastSrc = m.nrBackupAttributes["contentSrc"]
         if lastSrc = invalid then lastSrc = m.nrBackupAttributes["adSrc"]
-        
+
         'Store intial buffering state and send buffer end
         shouldSendStart = m.nrIsInitialBuffering
         nrSendBufferEnd()
-        
+
         if m.nrVideoObject.position = 0
             if lastSrc = currentSrc OR m.nrVideoObject.contentIsPlaylist = false
                 'Send Start only if initial start not sent already
@@ -1243,7 +1238,7 @@ end function
 function nrIndexObserver() as Void
     nrLog("---------- Index Observer ----------")
     nrLogVideoInfo()
-    
+
     'Check if the index change happened with an invalid playlist
     if m.nrVideoObject.contentIsPlaylist = false or m.nrVideoObject.content = invalid
         return
@@ -1288,29 +1283,29 @@ end function
 
 function nrHarvestTimerHandlerEvents() as Void
     nrLog("--- nrHarvestTimerHandlerEvents ---")
-    
+
     if LCase(m.bgTaskEvents.state) = "run"
         nrLog("NRTaskEvents still running, abort")
         return
     end if
-    
+
     m.bgTaskEvents.control = "RUN"
 end function
 
 function nrHarvestTimerHandlerLogs() as Void
     nrLog("--- nrHarvestTimerHandlerLogs ---")
-    
+
     if LCase(m.bgTaskLogs.state) = "run"
         nrLog("NRTaskLogs still running, abort")
         return
     end if
-    
+
     m.bgTaskLogs.control = "RUN"
 end function
 
 function nrGroupingHandler() as Void
     nrLog("--- nrGroupingHandler ---")
-    
+
     nrProcessGroupedEvents()
 end function
 
